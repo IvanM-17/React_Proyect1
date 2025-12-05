@@ -1,26 +1,32 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-import { products } from "../data/products";
 import ItemDetail from "../components/ItemDetail";
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+
 
 export default function ItemDetailContainer() {
-  const [product, setProduct] = useState(null);
-  const { itemId } = useParams();
+const [product, setProduct] = useState(null);
+const [loading, setLoading] = useState(true);
+const { itemId } = useParams();
 
-  useEffect(() => {
-    const getProduct = new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(products.find(p => p.id === parseInt(itemId)));
-      }, 1000);
-    });
 
-    getProduct.then(res => setProduct(res));
-  }, [itemId]);
+useEffect(() => {
+setLoading(true);
+const ref = doc(db, 'items', itemId);
+getDoc(ref)
+.then(snapshot => {
+if (snapshot.exists()) setProduct({ id: snapshot.id, ...snapshot.data() });
+else setProduct(null);
+})
+.catch(err => console.error(err))
+.finally(() => setLoading(false));
+}, [itemId]);
 
-  return (
-    <div className="item-detail-container">
-      {product ? <ItemDetail product={product} /> : <p>Cargando, Espere porfavor..</p>}
-    </div>
-  );
+
+return (
+<div className="item-detail-container">
+{loading ? <p>Cargando, espere por favor...</p> : (product ? <ItemDetail product={product} /> : <p>Producto no encontrado.</p>)}
+</div>
+);
 }

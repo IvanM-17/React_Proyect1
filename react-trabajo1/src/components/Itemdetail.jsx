@@ -1,10 +1,18 @@
 import { useState } from "react";
+import ItemCount from './ItemCount';
+import { useCart } from '../contexts/CartContext';
 
 export default function ItemDetail({ product }) {
-  const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
+  const { addItem } = useCart();
 
-  const increase = () => setQuantity((prev) => prev + 1);
-  const decrease = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const handleAdd = (qty) => {
+    addItem(product, qty);
+    setAdded(true);
+
+    // Para que el mensaje desaparezca
+    setTimeout(() => setAdded(false), 800);
+  };
 
   return (
     <div className="item-detail">
@@ -13,13 +21,16 @@ export default function ItemDetail({ product }) {
       <p>{product.description}</p>
       <h3>${product.price}</h3>
 
-      <div className="quantity-controls">
-        <button onClick={decrease}>−</button>
-        <span>{quantity}</span>
-        <button onClick={increase}>+</button>
-      </div>
-
-      <button className="add-cart">Agregar al carrito</button>
+      {!added ? (
+        <ItemCount
+          initial={1}
+          stock={product.stock || 0}
+          onAdd={handleAdd}
+          product={product}   
+        />
+      ) : (
+        <p className="added-msg">Se Agrego al Carrito</p>
+      )}
     </div>
   );
 }

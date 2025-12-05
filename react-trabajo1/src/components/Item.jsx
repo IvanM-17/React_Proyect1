@@ -1,11 +1,25 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useCart } from '../contexts/CartContext';
+import { useState } from 'react';
+import ItemCount from './ItemCount';
 
 export default function Item({ item }) {
-  const [quantity, setQuantity] = useState(1);
+  const { addItem } = useCart();
+  const [added, setAdded] = useState(false);
 
-  const increase = () => setQuantity((prev) => prev + 1);
-  const decrease = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const normalized = {
+    ...item,
+    price: Number(item.price),
+    stock: Number(item.stock),
+  };
+
+  const handleAdd = (qty) => {
+    if (normalized.stock <= 0) return;
+    addItem(normalized, qty);
+    setAdded(true);
+
+    setTimeout(() => setAdded(false), 800);
+  };
 
   return (
     <div className="item-card">
@@ -13,16 +27,19 @@ export default function Item({ item }) {
       <h3>{item.name}</h3>
       <p>${item.price}</p>
 
+      {!added ? (
+        <ItemCount 
+          stock={normalized.stock} 
+          initial={1} 
+          onAdd={handleAdd}
+          product={normalized}  
+        />
+      ) : (
+        <p className="added-msg">Se Agrego al Carrito</p>
+      )}
+
       <div className="item-buttons">
         <Link to={`/item/${item.id}`}>Ver detalle</Link>
-
-        <div className="quantity-controls">
-          <button onClick={decrease}>−</button>
-          <span>{quantity}</span>
-          <button onClick={increase}>+</button>
-        </div>
-
-        <button className="add-cart">Agregar al carrito</button>
       </div>
     </div>
   );
